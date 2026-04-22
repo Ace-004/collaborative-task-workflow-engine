@@ -8,7 +8,7 @@ export const createWorkspace=async(req:Request,res:Response)=>{
   try {
     if(!owner_id)throw new Error("no user id");
     if(typeof owner_id === "number"){
-      const workspace=createWorkspaceService(name,owner_id);
+      const workspace = await createWorkspaceService(name, owner_id);
       res.status(201).json({success:true,data:workspace});
     }
   } catch (error) {
@@ -45,9 +45,10 @@ export const getWorkspaceById=async(req : Request,res: Response)=>{
 
 export const deleteWorkspace=async(req:Request,res:Response)=>{
     const id=req.params.id;
+    const owner_id=req.user;
   try {
-    if(typeof id === "string"){
-      const workspace = await deleteWorkspaceService(id);
+    if(typeof id === "string" && typeof owner_id === "number"){
+      const workspace = await deleteWorkspaceService(id,owner_id);
       res.status(200).json({success:true,message:"workspace deleted successfully"});
     }
   } catch (error) {
