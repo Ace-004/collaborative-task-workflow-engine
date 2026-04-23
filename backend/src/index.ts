@@ -3,6 +3,9 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
 import workspaceRoutes from "./routes/workspace.routes.js";
+import projectRoutes from './routes/project.route.js';
+import taskRoutes from './routes/task.route.js';
+import commentRoutes from './routes/comment.route.js';
 
 const app = express();
 
@@ -12,9 +15,12 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/auth", authRoutes);
 app.use("/workspace", workspaceRoutes);
+app.use("/project", projectRoutes);
+app.use("/task", taskRoutes);
+app.use("/comment", commentRoutes);
 
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
-  console.log(`server running on port${PORT}`);
+  console.log(`server running on port ${PORT}`);
 });

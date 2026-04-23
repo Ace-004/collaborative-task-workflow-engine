@@ -5,7 +5,7 @@ export const verifyUser = async (req, res, next) => {
         if (!header)
             throw new Error("no token");
         if (!header || header.split(" ")[0] !== "Bearer")
-            res.status(401).json({ success: false, message: "unauthorized" });
+            return res.status(401).json({ success: false, message: "unauthorized" });
         const token = header.split(" ")[1];
         if (!token)
             throw new Error("no token");
@@ -15,8 +15,8 @@ export const verifyUser = async (req, res, next) => {
         next();
     }
     catch (error) {
-        console.log(error);
-        res.status(500).json({ success: false, message: "server error" });
+        console.error(error);
+        res.status(500).json({ success: false, message: "Server Error" });
     }
 };
 //# sourceMappingURL=auth.middleware.js.map

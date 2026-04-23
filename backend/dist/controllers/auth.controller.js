@@ -4,6 +4,8 @@ import { createUserQuery, getUserQuery } from '../db/queries/user.query.js';
 import { generateToken } from '../utils/generatetoken.js';
 export const registerUserController = async (req, res) => {
     const { email, password } = req.body;
+    if (!email || !password)
+        return res.status(400).json({ success: false, message: "Missing email or password" });
     try {
         const exist_user = await getUserQuery(email);
         if (exist_user)
@@ -14,11 +16,13 @@ export const registerUserController = async (req, res) => {
         res.status(201).json({ success: true, data: user, token });
     }
     catch (error) {
-        res.status(500).json({ success: false, message: "server error" });
+        res.status(500).json({ success: false, message: "Server Error" });
     }
 };
 export const loginUserController = async (req, res) => {
     const { email, password } = req.body;
+    if (!email || !password)
+        return res.status(400).json({ success: false, message: "Missing email or password" });
     try {
         const user = await getUserQuery(email);
         console.log(user);
@@ -35,7 +39,7 @@ export const loginUserController = async (req, res) => {
         res.status(200).json({ success: true, data, token });
     }
     catch (error) {
-        res.status(500).json({ success: false, message: "error" });
+        res.status(500).json({ success: false, message: "Server Error" });
     }
 };
 //# sourceMappingURL=auth.controller.js.map
