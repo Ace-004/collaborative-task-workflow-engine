@@ -42,12 +42,12 @@ export const deleteTaskService = async (id: number, user_id: number) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const result = await deleteTaskQuery(id, user_id, client);
-    if (!result) throw new Error("Unauthorized or task not found");
     await client.query(
-      "INSERT INTO activity_logs (task_id,action) values ($1,'task deleted')",
+      "INSERT INTO activity_logs (task_id,action) values ($1,'task deleted') RETURNING *",
       [id],
     );
+    const result = await deleteTaskQuery(id, user_id, client);
+    if (!result) throw new Error("Unauthorized or task not found");
     await client.query("COMMIT");
     return result;
   } catch (error) {
