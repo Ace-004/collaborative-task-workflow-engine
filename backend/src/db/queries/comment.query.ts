@@ -7,7 +7,7 @@ export const createCommentQuery = async (
 ) => {
   try {
     const result = await pool.query(
-      "INSERT INTO comments (task_id,user_id,content) SELECT $1, $2, $3 WHERE EXISTS (SELECT 1 FROM tasks t JOIN projects p ON t.project_id = p.id JOIN workspace w ON p.workspace_id = w.id WHERE t.id = $1 AND w.owner_id = $2) RETURNING *",
+      "INSERT INTO comments (task_id,user_id,content) SELECT $1, $2, $3 WHERE EXISTS (SELECT 1 FROM tasks t JOIN projects p ON t.project_id = p.id JOIN workspace_members wm ON p.workspace_id = wm.workspace_id WHERE t.id = $1 AND wm.user_id = $2) RETURNING *",
       [task_id, user_id, content],
     );
     return result.rows[0];
@@ -19,7 +19,10 @@ export const createCommentQuery = async (
 
 export const deleteCommentQuery = async (id: number, user_id: number) => {
   try {
-    const result = await pool.query("DELETE FROM comments WHERE id = $1 AND user_id = $2 RETURNING *", [id, user_id]);
+    const result = await pool.query(
+      "DELETE FROM comments WHERE id = $1 AND user_id = $2 RETURNING *",
+      [id, user_id],
+    );
     return result.rows[0];
   } catch (error) {
     console.error("error occurred", error);

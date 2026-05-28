@@ -26,7 +26,7 @@ export const getAllProjectsQuery = async (workspace_id: number) => {
   }
 };
 
-export const getProjectByIdQuery = async (id: string) => {
+export const getProjectByIdQuery = async (id: number) => {
   try {
     const result = await pool.query(
       "SELECT p.name,p.id,p.workspace_id,w.name FROM projects p JOIN workspace w on p.workspace_id = w.id WHERE p.id = $1",

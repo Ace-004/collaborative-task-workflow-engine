@@ -4,7 +4,7 @@ export const createTaskQuery = async (title, description, priority, project_id, 
         if (priority === "") {
             priority = null;
         }
-        const result = await client.query("INSERT INTO tasks (title,description,priority,project_id,assigned_user_id) SELECT $1, $2, $3, $4, $5 WHERE EXISTS (SELECT 1 FROM projects p JOIN workspace w ON p.workspace_id = w.id WHERE p.id = $4 AND w.owner_id = $6) RETURNING *", [title, description, priority, project_id, assigned_user_id, user_id]);
+        const result = await client.query("INSERT INTO tasks (title,description,priority,project_id,assigned_user_id) SELECT $1, $2, $3, $4, $5 WHERE EXISTS (SELECT 1 FROM projects p JOIN workspace_members wm ON p.workspace_id = wm.workspace_id WHERE p.id = $4 AND wm.user_id = $6) RETURNING *", [title, description, priority, project_id, assigned_user_id, user_id]);
         return result.rows[0];
     }
     catch (error) {
@@ -34,7 +34,7 @@ export const getTaskByIdQuery = async (id) => {
 };
 export const deleteTaskQuery = async (id, user_id, client) => {
     try {
-        const result = await client.query("DELETE FROM tasks WHERE id=$1 AND project_id IN (SELECT p.id FROM projects p JOIN workspace w ON p.workspace_id = w.id WHERE w.owner_id = $2) RETURNING *", [id, user_id]);
+        const result = await client.query("DELETE FROM tasks WHERE id=$1 AND project_id IN (SELECT p.id FROM projects p JOIN workspace_members wm ON p.workspace_id = wm.workspace_id WHERE wm.user_id = $2) RETURNING *", [id, user_id]);
         return result.rows[0];
     }
     catch (error) {

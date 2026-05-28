@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
-export declare const createComment: (req: Request, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
-export declare const deleteComment: (req: Request, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
+import type { NextFunction, Request, Response } from "express";
+export declare const createComment: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+export declare const deleteComment: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 //# sourceMappingURL=comment.controller.d.ts.map

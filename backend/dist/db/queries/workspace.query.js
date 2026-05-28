@@ -51,7 +51,24 @@ export const deleteWorkspaceQuery = async (workspace_id, owner_id) => {
 };
 export const joinWorkspaceQuery = async (user_id, workspace_id) => {
     try {
+        const workspaceResult = await pool.query("SELECT id FROM workspace WHERE id = $1", [workspace_id]);
+        if (workspaceResult.rows.length === 0) {
+            return null;
+        }
+        const existingMember = await pool.query("SELECT role FROM workspace_members WHERE user_id = $1 AND workspace_id = $2", [user_id, workspace_id]);
+        if (existingMember.rows.length > 0) {
+            return {
+                workspace_id,
+                user_id,
+                role: existingMember.rows[0].role,
+            };
+        }
         await pool.query("INSERT INTO workspace_members (user_id,workspace_id,role) values ($1,$2,'member')", [user_id, workspace_id]);
+        return {
+            workspace_id,
+            user_id,
+            role: "member",
+        };
     }
     catch (error) {
         console.error("Error in joinWorkspaceQuery:", error);

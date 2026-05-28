@@ -1,14 +1,13 @@
 import { verifyToken } from "../utils/verifytoken.js";
 export const verifyUser = async (req, res, next) => {
     try {
-        const header = req.headers.authorization;
-        if (!header)
-            throw new Error("no token");
-        if (!header || header.split(" ")[0] !== "Bearer")
-            return res.status(401).json({ success: false, message: "unauthorized" });
-        const token = header.split(" ")[1];
+        // const header:string | undefined= req.headers.authorization;
+        const token = req.cookies.token;
         if (!token)
             throw new Error("no token");
+        // if(!token || token.split(" ")[0]!=="Bearer")return res.status(401).json({success:false,message:"unauthorized"});
+        // token  =token.split(" ")[1];
+        // if(!token)throw new Error("no token");
         const decoded = verifyToken(token);
         // (req as any).user=decoded.userId
         req.user = decoded.id;

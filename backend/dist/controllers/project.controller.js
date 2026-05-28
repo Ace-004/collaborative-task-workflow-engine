@@ -1,56 +1,72 @@
 import { createProjectQuery, deleteProjectQuery, getAllProjectsQuery, getProjectByIdQuery } from "../db/queries/project.query.js";
-export const createProject = async (req, res) => {
+import { AppError } from "../middleware/error.middleware.js";
+export const createProject = async (req, res, next) => {
     const { name, workspace_id } = req.body;
     const owner = req.user;
+    if (!name || !workspace_id) {
+        return next(new AppError(400, "Project name and workspace ID are required"));
+    }
     try {
-        if (typeof owner === "number") {
-            const project = await createProjectQuery(name, workspace_id, owner);
-            if (!project)
-                return res.status(403).json({ success: false, message: "Unauthorized or workspace not found" });
-            res.status(201).json({ success: true, data: project });
+        if (typeof owner !== "number") {
+            return next(new AppError(401, "User ID not found in session"));
         }
+        const project = await createProjectQuery(name, workspace_id, owner);
+        if (!project) {
+            return next(new AppError(403, "Unauthorized or workspace not found"));
+        }
+        res.status(201).json({ success: true, data: project });
     }
     catch (error) {
-        console.error('error occurred', error);
-        res.status(500).json({ success: false, message: "Server Error" });
+        next(error);
     }
 };
-export const getAllProjects = async (req, res) => {
+export const getAllProjects = async (req, res, next) => {
     const { workspace_id } = req.query;
+    if (!workspace_id || isNaN(Number(workspace_id))) {
+        return next(new AppError(400, "Workspace ID is required and must be a number"));
+    }
     try {
         const projects = await getAllProjectsQuery(Number(workspace_id));
         res.status(200).json({ success: true, data: projects });
     }
     catch (error) {
-        console.error('error occurred', error);
-        res.status(500).json({ success: false, message: "Server Error" });
+        next(error);
     }
 };
-export const getProjectById = async (req, res) => {
-    const id = req.params.id;
+export const getProjectById = async (req, res, next) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+        return next(new AppError(400, "Invalid project ID format"));
+    }
     try {
         const project = await getProjectByIdQuery(id);
+        if (!project) {
+            return next(new AppError(404, "Project not found"));
+        }
         res.status(200).json({ success: true, data: project });
     }
     catch (error) {
-        console.error('error occured', error);
-        res.status(500).json({ success: false, message: "Server Error" });
+        next(error);
     }
 };
-export const deleteProject = async (req, res) => {
+export const deleteProject = async (req, res, next) => {
     const id = req.params.id;
     const owner = req.user;
+    if (typeof id !== "string") {
+        return next(new AppError(400, "Project ID is required and must be a string"));
+    }
     try {
-        if (typeof owner === "number" && typeof id === "string") {
-            const project = await deleteProjectQuery(id, owner);
-            if (!project)
-                return res.status(403).json({ success: false, message: "Unauthorized or project not found" });
-            res.status(200).json({ success: true, message: "project deleted successfully" });
+        if (typeof owner !== "number") {
+            return next(new AppError(401, "User ID not found in session"));
         }
+        const project = await deleteProjectQuery(id, owner);
+        if (!project) {
+            return next(new AppError(403, "Unauthorized or project not found"));
+        }
+        res.status(200).json({ success: true, message: "project deleted successfully" });
     }
     catch (error) {
-        console.error('error occured', error);
-        res.status(500).json({ success: false, message: "Server Error" });
+        next(error);
     }
 };
 //# sourceMappingURL=project.controller.js.map

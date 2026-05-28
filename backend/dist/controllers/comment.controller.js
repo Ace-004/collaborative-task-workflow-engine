@@ -1,34 +1,45 @@
 import { createCommentQuery, deleteCommentQuery } from "../db/queries/comment.query.js";
-export const createComment = async (req, res) => {
+import { AppError } from "../middleware/error.middleware.js";
+export const createComment = async (req, res, next) => {
     const { task_id, content } = req.body;
     const user = req.user;
+    if (!task_id || !content) {
+        return next(new AppError(400, "Task ID and content are required"));
+    }
     try {
         if (typeof user === "number") {
-            const comment = await createCommentQuery(task_id, user, content);
+            const comment = await createCommentQuery(Number(task_id), user, content);
             if (!comment)
-                return res.status(403).json({ success: false, message: "Unauthorized or task not found" });
+                return next(new AppError(403, "Unauthorized or task not found"));
             res.status(201).json({ success: true, data: comment });
         }
-    }
-    catch (error) {
-        console.error('error occurred', error);
-        res.status(500).json({ success: false, message: "Server Error" });
-    }
-};
-export const deleteComment = async (req, res) => {
-    const id = req.params.id;
-    const user = req.user;
-    try {
-        if (typeof user === "number") {
-            const task = await deleteCommentQuery(Number(id), user);
-            if (!task)
-                return res.status(403).json({ success: false, message: "Unauthorized or comment not found" });
-            res.status(200).json({ success: true, message: "comment deleted successfully" });
+        else {
+            return next(new AppError(401, "User ID not found in session"));
         }
     }
     catch (error) {
-        console.error('error occurred', error);
-        res.status(500).json({ success: false, message: "Server Error" });
+        next(error);
+    }
+};
+export const deleteComment = async (req, res, next) => {
+    const id = Number(req.params.id);
+    const user = req.user;
+    if (isNaN(id)) {
+        return next(new AppError(400, "Invalid comment ID format"));
+    }
+    try {
+        if (typeof user === "number") {
+            const comment = await deleteCommentQuery(id, user);
+            if (!comment)
+                return next(new AppError(403, "Unauthorized or comment not found"));
+            res.status(200).json({ success: true, message: "comment deleted successfully" });
+        }
+        else {
+            return next(new AppError(401, "User ID not found in session"));
+        }
+    }
+    catch (error) {
+        next(error);
     }
 };
 //# sourceMappingURL=comment.controller.js.map
