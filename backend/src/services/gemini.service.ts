@@ -1,7 +1,12 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
-// Read API key from environmental variables
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const apiKey = process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+  throw new Error("GEMINI_API_KEY is not configured");
+}
+
+const ai = new GoogleGenerativeAI(apiKey);
 
 interface DecodedTask {
   title: string;
@@ -10,7 +15,9 @@ interface DecodedTask {
   estimated_hours: number;
 }
 
-export const decomposeRequirementWithAI = async (requirements: string): Promise<DecodedTask[]> => {
+export const decomposeRequirementWithAI = async (
+  requirements: string,
+): Promise<DecodedTask[]> => {
   const prompt = `
     You are an expert technical product manager. Decompose the following user feature request into a set of discrete, actionable engineering tasks.
     
@@ -25,21 +32,23 @@ export const decomposeRequirementWithAI = async (requirements: string): Promise<
   `;
 
   try {
-    const response = await ai.models.generateContent({
+    const model = ai.getGenerativeModel({
       model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        // Enforce structured JSON output matching our typescript interface
+      generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: "ARRAY",
+          type: SchemaType.ARRAY,
           items: {
-            type: "OBJECT",
+            type: SchemaType.OBJECT,
             properties: {
-              title: { type: "STRING" },
-              description: { type: "STRING" },
-              priority: { type: "STRING", enum: ["low", "medium", "high"] },
-              estimated_hours: { type: "INTEGER" },
+              title: { type: SchemaType.STRING },
+              description: { type: SchemaType.STRING },
+              priority: {
+                type: SchemaType.STRING,
+                format: "enum",
+                enum: ["low", "medium", "high"],
+              },
+              estimated_hours: { type: SchemaType.INTEGER },
             },
             required: ["title", "description", "priority", "estimated_hours"],
           },
@@ -47,7 +56,8 @@ export const decomposeRequirementWithAI = async (requirements: string): Promise<
       },
     });
 
-    const responseText = response.text;
+    const response = await model.generateContent(prompt);
+    const responseText = response.response.text();
     if (!responseText) {
       throw new Error("Empty response received from Gemini API");
     }
