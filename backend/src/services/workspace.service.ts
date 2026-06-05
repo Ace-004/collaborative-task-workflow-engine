@@ -4,6 +4,8 @@ import {
   getWorkspaceByIdQuery,
   getWorkspaceQuery,
   joinWorkspaceQuery,
+  getAllAvailableWorkspacesQuery,
+  getWorkspaceMembersQuery,
 } from "../db/queries/workspace.query.js";
 
 export const createWorkspaceService = async (
@@ -36,4 +38,12 @@ export const joinWorkspaceService = async (
   workspaceId: number,
 ) => {
   return await joinWorkspaceQuery(userId, workspaceId);
+};
+
+export const getAllAvailableWorkspacesService = async () => {
+  return await getAllAvailableWorkspacesQuery();
+};
+
+export const getWorkspaceMembersService = async (workspace_id: number) => {
+  return await getWorkspaceMembersQuery(workspace_id);
 };

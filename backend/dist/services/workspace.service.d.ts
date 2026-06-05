@@ -7,4 +7,6 @@ export declare const joinWorkspaceService: (userId: number, workspaceId: number)
     user_id: number;
     role: any;
 } | null>;
+export declare const getAllAvailableWorkspacesService: () => Promise<any[]>;
+export declare const getWorkspaceMembersService: (workspace_id: number) => Promise<any[]>;
 //# sourceMappingURL=workspace.service.d.ts.map

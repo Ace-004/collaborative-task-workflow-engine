@@ -6,6 +6,8 @@ import {
   getAllWorkspace,
   getWorkspaceById,
   joinWorkspace,
+  getAllAvailableWorkspaces,
+  getWorkspaceMembers,
 } from "../controllers/workspace.controller.js";
 import { verifyUser } from "../middleware/auth.middleware.js";
 
@@ -13,6 +15,8 @@ const router: Router = express.Router();
 
 router.post("/create", verifyUser, createWorkspace);
 router.post("/join", verifyUser, joinWorkspace);
+router.get("/available", verifyUser, getAllAvailableWorkspaces);
+router.get("/members/:workspace_id", verifyUser, getWorkspaceMembers);
 router.get("/", verifyUser, getAllWorkspace);
 router.get(
   "/:id",

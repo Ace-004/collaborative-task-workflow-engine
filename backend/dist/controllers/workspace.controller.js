@@ -1,4 +1,4 @@
-import { createWorkspaceService, deleteWorkspaceService, getAllWorkspaceService, getWorkspaceByIdService, joinWorkspaceService, } from "../services/workspace.service.js";
+import { createWorkspaceService, deleteWorkspaceService, getAllWorkspaceService, getWorkspaceByIdService, joinWorkspaceService, getAllAvailableWorkspacesService, getWorkspaceMembersService, } from "../services/workspace.service.js";
 import { AppError } from "../middleware/error.middleware.js";
 export const createWorkspace = async (req, res, next) => {
     const { name } = req.body;
@@ -91,6 +91,32 @@ export const joinWorkspace = async (req, res, next) => {
             data: joinedWorkspace,
             message: "workspace joined successfully",
         });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+export const getAllAvailableWorkspaces = async (req, res, next) => {
+    try {
+        const workspaces = await getAllAvailableWorkspacesService();
+        res.status(200).json({ success: true, data: workspaces });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+export const getWorkspaceMembers = async (req, res, next) => {
+    const { workspace_id } = req.params;
+    const user_id = req.user;
+    try {
+        if (typeof user_id !== "number") {
+            return next(new AppError(401, "User ID not found in session"));
+        }
+        if (!workspace_id) {
+            return next(new AppError(400, "Workspace ID is required"));
+        }
+        const members = await getWorkspaceMembersService(Number(workspace_id));
+        res.status(200).json({ success: true, data: members });
     }
     catch (error) {
         next(error);

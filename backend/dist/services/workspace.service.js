@@ -1,4 +1,4 @@
-import { createWorkspaceQuery, deleteWorkspaceQuery, getWorkspaceByIdQuery, getWorkspaceQuery, joinWorkspaceQuery, } from "../db/queries/workspace.query.js";
+import { createWorkspaceQuery, deleteWorkspaceQuery, getWorkspaceByIdQuery, getWorkspaceQuery, joinWorkspaceQuery, getAllAvailableWorkspacesQuery, getWorkspaceMembersQuery, } from "../db/queries/workspace.query.js";
 export const createWorkspaceService = async (name, owner_id) => {
     return await createWorkspaceQuery(name, owner_id);
 };
@@ -13,5 +13,11 @@ export const deleteWorkspaceService = async (workspace_id, owner_id) => {
 };
 export const joinWorkspaceService = async (userId, workspaceId) => {
     return await joinWorkspaceQuery(userId, workspaceId);
+};
+export const getAllAvailableWorkspacesService = async () => {
+    return await getAllAvailableWorkspacesQuery();
+};
+export const getWorkspaceMembersService = async (workspace_id) => {
+    return await getWorkspaceMembersQuery(workspace_id);
 };
 //# sourceMappingURL=workspace.service.js.map

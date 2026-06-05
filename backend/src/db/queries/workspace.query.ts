@@ -114,3 +114,28 @@ export const joinWorkspaceQuery = async (
     throw error;
   }
 };
+
+export const getAllAvailableWorkspacesQuery = async () => {
+  try {
+    const result = await pool.query(
+      "SELECT DISTINCT w.id, w.name, w.owner_id, u.email as owner_email FROM workspace w JOIN users u ON w.owner_id = u.id ORDER BY w.name",
+    );
+    return result.rows;
+  } catch (error) {
+    console.error("Error in getAllAvailableWorkspacesQuery:", error);
+    throw error;
+  }
+};
+
+export const getWorkspaceMembersQuery = async (workspace_id: number) => {
+  try {
+    const result = await pool.query(
+      "SELECT wm.user_id, u.email, wm.role FROM workspace_members wm JOIN users u ON wm.user_id = u.id WHERE wm.workspace_id = $1 ORDER BY u.email",
+      [workspace_id],
+    );
+    return result.rows;
+  } catch (error) {
+    console.error("Error in getWorkspaceMembersQuery:", error);
+    throw error;
+  }
+};
