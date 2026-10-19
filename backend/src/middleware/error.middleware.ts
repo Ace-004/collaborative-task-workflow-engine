@@ -18,7 +18,11 @@ export const errorHandler = (
 ) => {
   const statusCode = err instanceof AppError ? err.statusCode : 500;
 
-  const message = err.message || "Internal Server Error";
+  // Never send raw internal errors (SQL text, hostnames) to clients in production.
+  const message =
+    err instanceof AppError || process.env.NODE_ENV !== "production"
+      ? err.message || "Internal Server Error"
+      : "Internal Server Error";
 
   //  console.error('=== REAL ERROR ===');
   // console.error('Message:', err.message);

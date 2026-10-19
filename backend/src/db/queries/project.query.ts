@@ -26,11 +26,11 @@ export const getAllProjectsQuery = async (workspace_id: number) => {
   }
 };
 
-export const getProjectByIdQuery = async (id: number) => {
+export const getProjectByIdQuery = async (id: number, user_id: number) => {
   try {
     const result = await pool.query(
-      "SELECT p.name,p.id,p.workspace_id,w.name FROM projects p JOIN workspace w on p.workspace_id = w.id WHERE p.id = $1",
-      [id]
+      "SELECT p.id,p.name,p.workspace_id,w.name AS workspace_name FROM projects p JOIN workspace w ON p.workspace_id = w.id JOIN workspace_members wm ON wm.workspace_id = w.id WHERE p.id = $1 AND wm.user_id = $2",
+      [id, user_id]
     );
     return result.rows[0];
   } catch (error) {

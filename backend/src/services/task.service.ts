@@ -1,13 +1,14 @@
 import type { PoolClient } from "pg";
 import { pool } from "../db/pool.js";
 import { createTaskQuery, deleteTaskQuery } from "../db/queries/task.query.js";
+import { AppError } from "../middleware/error.middleware.js";
 
 export const createTaskService = async (
   title: string,
   description: string,
   priority: string | null | undefined,
   project_id: number,
-  assigned_user_id: number,
+  assigned_user_id: number | null,
   user_id: number,
 ) => {
   const client: PoolClient = await pool.connect();
@@ -22,7 +23,11 @@ export const createTaskService = async (
       user_id,
       client,
     );
-    if (!result) throw new Error("Unauthorized or project not found");
+    if (!result)
+      throw new AppError(
+        403,
+        "Not allowed: not a project member, or the assignee is not a workspace member",
+      );
     await client.query(
       "INSERT INTO activity_logs (task_id,action) values ($1,'task created') RETURNING *",
       [result.id],

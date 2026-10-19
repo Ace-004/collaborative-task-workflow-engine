@@ -18,7 +18,7 @@ export const requireWorkspaceRole = (allowedRole :('admin'|'member')[])=>{
   return async (req: Request,res:Response,next:NextFunction)=>{
     const userId = req.user;
     // Extract workspace ID from parameter, query, or body
-    const workspaceIdRaw = req.params.workspaceId || req.params.id || req.query.workspace_id || req.body.workspace_id;
+    const workspaceIdRaw = req.params.workspaceId || req.params.workspace_id || req.params.id || req.query.workspace_id || req.body?.workspace_id;
 
     if(!userId)return next(new AppError(401,"user is not authenticated"));
 

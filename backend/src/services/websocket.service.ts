@@ -1,6 +1,7 @@
 import {Server as HttpServer} from "http";
 import { WebSocketServer,WebSocket } from "ws";
-import jwt from "jsonwebtoken";
+import { verifyToken } from "../utils/verifytoken.js";
+import { pool } from "../db/pool.js";
 
 
 interface AuthenticatedWebSocket extends WebSocket{
@@ -11,7 +12,7 @@ interface AuthenticatedWebSocket extends WebSocket{
 const workspaceRooms = new Map<number,Set<AuthenticatedWebSocket>>();
 
 export const initWebSocketServer = (server:HttpServer)=>{
-  const wss = new WebSocketServer({noServer:true});
+  const wss = new WebSocketServer({noServer:true, maxPayload: 16 * 1024});
 
   server.on("upgrade",(request,socket,head)=>{
     const cookieHeader=request.headers.cookie || "";
@@ -22,7 +23,7 @@ export const initWebSocketServer = (server:HttpServer)=>{
       return;
     };
     try {
-      const decoded = jwt.verify(token,(process.env.JWT_SECRET_KEY as string)) as {id:number};
+      const decoded = verifyToken(token) as {id:number};
 
       wss.handleUpgrade(request,socket,head,(ws)=>{
         const AuthenticatedWs=ws as AuthenticatedWebSocket;
@@ -41,13 +42,24 @@ export const initWebSocketServer = (server:HttpServer)=>{
     ws.on("pong",()=>{
       ws.isAlive=true;
     });
-    ws.on("message",(message:string)=>{
+    ws.on("message",async (message)=>{
       try {
-        const parsed=JSON.parse(message);
+        const parsed=JSON.parse(message.toString());
         const {type,workspaceId}=parsed;
         if(type==='join-workspace'){
           const wId=Number(workspaceId);
-          if(isNaN(wId))return;
+          if(!Number.isInteger(wId))return;
+
+          // Only workspace members may subscribe to a workspace's events.
+          const { rows } = await pool.query(
+            "SELECT 1 FROM workspace_members WHERE user_id=$1 AND workspace_id=$2",
+            [ws.userId, wId],
+          );
+          if(rows.length===0){
+            ws.send(JSON.stringify({event:"error",data:{message:"not a member of this workspace"}}));
+            return;
+          }
+          if(ws.readyState!==WebSocket.OPEN)return; // closed while we were checking
 
           leaveAllRooms(ws);//remove sockets from all previous rooms if any
 
@@ -58,7 +70,7 @@ export const initWebSocketServer = (server:HttpServer)=>{
           console.log(`[WS] User ${ws.userId} joined workspace room: ${wId}`);
         }
       } catch (error) {
-        console.error("[WS] Message parsing error:", error);
+        console.error("[WS] Message handling error:", error);
       };
     });
 
