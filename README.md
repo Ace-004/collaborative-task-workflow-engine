@@ -118,6 +118,7 @@ frontend/
 - **Open workspace joining.** Any signed-in user can list and join any workspace, so workspace isolation is only as strong as that join policy. Invitations or approval would be the next step.
 - **Tasks cannot be edited after creation.** Tasks have a `status` column, but there is no endpoint to change status, assignee or content yet, and no workflow transitions.
 - **Comments are API-only.** The endpoints exist; the UI does not use them. Comments are not broadcast over WebSockets.
+- **Only task creation and deletion are broadcast live.** New projects, workspace members and comments show up for other users after a refresh.
 - **Single server instance.** WebSocket rooms are an in-process map; Redis is used for caching only, not pub/sub.
 - **No rate limiting or `helmet`,** including on the paid Gemini endpoint.
 - **No unit tests or CI.** Only the integration scripts above.
