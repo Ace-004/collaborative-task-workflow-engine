@@ -16,6 +16,13 @@ const api = axios.create({
   },
 });
 
+api.interceptors.response.use((response)=>response,(error)=>{
+  if(error.response?.status===401){
+    localStorage.clear();
+    window.location.href='/'
+  }
+})
+
 export const apiGet = async <T>(url: string): Promise<ApiResponse<T>> => {
   const { data } = await api.get<ApiResponse<T>>(url);
   return data;

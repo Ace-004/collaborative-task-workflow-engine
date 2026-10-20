@@ -3,8 +3,9 @@ export const verifyUser = async (req, res, next) => {
     try {
         // const header:string | undefined= req.headers.authorization;
         const token = req.cookies.token;
-        if (!token)
+        if (!token) {
             throw new Error("no token");
+        }
         // if(!token || token.split(" ")[0]!=="Bearer")return res.status(401).json({success:false,message:"unauthorized"});
         // token  =token.split(" ")[1];
         // if(!token)throw new Error("no token");
@@ -13,8 +14,12 @@ export const verifyUser = async (req, res, next) => {
         req.user = decoded.id;
         next();
     }
-    catch (error) {
-        console.error(error);
+    catch (err) {
+        console.error(err);
+        const error = err;
+        if (error.name === "TokenExpiredError") {
+            return res.status(401).json({ success: false, message: "token expired" });
+        }
         res.status(500).json({ success: false, message: "Server Error" });
     }
 };
