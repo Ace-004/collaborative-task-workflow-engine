@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { User, Workspace, Project, Task, WorkspaceMember } from "./types";
-import { apiGet, apiPost, apiDelete } from "./api";
+import { apiGet, apiPost, apiDelete, apiBaseUrl } from "./api";
 import AuthForm from "./components/AuthForm";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
@@ -30,6 +30,12 @@ export default function App() {
   // WebSocket state
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  // The socket handler outlives renders, so read the current project through a ref
+  // (otherwise it keeps the project that was selected when the socket was opened).
+  const selectedProjectRef = useRef<Project | null>(null);
+  useEffect(() => {
+    selectedProjectRef.current = selectedProject;
+  }, [selectedProject]);
 
   // Check auth on mount
   useEffect(() => {
@@ -95,8 +101,8 @@ export default function App() {
       wsRef.current.close();
     }
 
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//localhost:3000/`;
+    // same host as the API; http -> ws, https -> wss
+    const wsUrl = apiBaseUrl.replace(/^http/, "ws").replace(/\/$/, "") + "/";
 
     console.log("Connecting WebSocket to:", wsUrl);
     const ws = new WebSocket(wsUrl);
@@ -116,7 +122,8 @@ export default function App() {
 
         if (evType === "task_created") {
           const task = data.task;
-          if (selectedProject && task.project_id === selectedProject.id) {
+          const current = selectedProjectRef.current;
+          if (current && task.project_id === current.id) {
             setTasks((prev) => {
               if (prev.some((t) => t.id === task.id)) return prev;
               return [...prev, task];
@@ -332,10 +339,16 @@ export default function App() {
     localStorage.setItem("taskflow_user", JSON.stringify(loggedUser));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // The auth cookie is httpOnly, so only the server can clear it.
+      await apiPost("/auth/logout", {});
+    } catch (err) {
+      console.error("Logout request failed", err);
+    }
+    wsRef.current?.close();
     setUser(null);
     localStorage.removeItem("taskflow_user");
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 
   if (!user) {

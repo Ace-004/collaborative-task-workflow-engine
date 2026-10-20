@@ -45,7 +45,10 @@ export const getProjectById = async (req: Request, res: Response, next: NextFunc
   }
 
   try {
-    const project = await getProjectByIdQuery(id);
+    if (typeof req.user !== "number") {
+      return next(new AppError(401, "User ID not found in session"));
+    }
+    const project = await getProjectByIdQuery(id, req.user);
     if (!project) {
       return next(new AppError(404, "Project not found"));
     }
@@ -75,4 +78,4 @@ export const deleteProject = async (req: Request, res: Response, next: NextFunct
   } catch (error) {
     next(error);
   }
-};
+};
